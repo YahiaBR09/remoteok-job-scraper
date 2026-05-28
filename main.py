@@ -76,7 +76,7 @@ for job in jobs:
 df = pd.DataFrame(data)
 
 df.to_csv(
-    "jobs.csv",
+    "sample_jobs.csv",
     index=False,
     encoding="utf-8-sig"
 )

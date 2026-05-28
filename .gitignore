@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 venv/
+jobs.csv
+books.csv
+!sample_jobs.csv

@@ -1,88 +1,84 @@
 import requests
-from bs4 import BeautifulSoup
 import pandas as pd
-import time
+from html import unescape
+from bs4 import BeautifulSoup
+from ftfy import fix_text
 
-base_url = "https://books.toscrape.com/catalogue/page-{}.html"
 
-all_books = []
+url = "https://remoteok.com/remote-jobs.json"
 
-for page in range(1, 5):
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-    url = base_url.format(page)
 
-    print(f"Scraping page {page}...")
+# 🔥 دالة تنظيف عامة
+def clean_text(text):
 
-    try:
-        response = requests.get(url, timeout=10)
+    if not text:
+        return ""
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error on page {page}: {e}")
-        continue
+    # HTML entities مثل &amp;
+    text = unescape(text)
 
-    time.sleep(1)
+    # إصلاح encoding الغريب
+    text = fix_text(text)
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    # إزالة HTML
+    text = BeautifulSoup(
+        text,
+        "html.parser"
+    ).get_text(" ", strip=True)
 
-    books = soup.find_all("article", class_="product_pod")
+    # إزالة المسافات الزائدة
+    text = " ".join(text.split())
 
-    for book in books:
+    return text
 
-        title = book.h3.a["title"]
-        
-        title_link = book.h3.a["href"]
 
-        price = book.find(
-            "p",
-            class_="price_color"
-        ).text.replace("Â", "")
-        price = price.replace("£", "")
-        price = float(price)
+response = requests.get(url, headers=headers)
 
-        image_url = "https://books.toscrape.com/" + book.find("img")["src"].replace("../", "")
+jobs = response.json()
 
-        rating = book.find(
-            "p",
-            class_="star-rating"
-        )["class"][1]
+data = []
 
-        book_url = "https://books.toscrape.com/catalogue/" + title_link
-        try:
-            book_response = requests.get(book_url, timeout=10)
+for job in jobs:
 
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching book details for '{title}': {e}")
-            continue
+    if isinstance(job, dict) and "position" in job:
 
-        time.sleep(1)
-        
-        book_soup = BeautifulSoup(book_response.text, "html.parser")
-        description_tag = book_soup.find("div", id="product_description")
-        description = description_tag.find_next_sibling("p").get_text(" ", strip=True) if description_tag else "No description available."
+        title = clean_text(job.get("position"))
+        company = clean_text(job.get("company"))
 
-        half = len(description) // 2
+        tags = ", ".join(job.get("tags", []))
+        tags = clean_text(tags)
 
-        if description[:half] == description[half:]:
-            description = description[:half]
+        salary = clean_text(str(job.get("salary", "Not specified")))
 
-        upc = book_soup.find("th", string="UPC").find_next_sibling("td").text
+        location = clean_text(job.get("location", "Remote"))
 
-        stock = book_soup.find("th", string="Availability").find_next_sibling("td").text.strip()
-        stock = stock.replace("In stock (", "").replace(" available)", "")
+        date = clean_text(job.get("date", ""))
 
-        all_books.append({
-            "Title": title,
-            "Price": price,
-            "Rating": rating,
-            "Image URL": image_url,
-            "Description": description,
-            "UPC": upc,
-            "Stock": stock
+        description = clean_text(
+            job.get("description", "")
+        )
+
+        data.append({
+            "title": title,
+            "company": company,
+            "tags": tags,
+            "salary": salary,
+            "location": location,
+            "date": date,
+            "description": description
         })
 
 
-df = pd.DataFrame(all_books)
+df = pd.DataFrame(data)
 
-df.to_csv("books.csv", index=False, encoding="utf-8-sig")
+df.to_csv(
+    "jobs.csv",
+    index=False,
+    encoding="utf-8-sig"
+)
 
-print("Saved books.csv successfully!")
+print("Clean Stage 3 completed 🚀")

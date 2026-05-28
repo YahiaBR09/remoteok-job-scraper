@@ -1,31 +1,29 @@
-# Books To Scrape Web Scraper
+# RemoteOK Job Scraper
 
-A Python web scraping project that extracts book data from BooksToScrape.com using Requests and BeautifulSoup.
-
-## Preview
-
-![Preview](preview.png)
+A Python web scraping project that extracts remote job listings from the RemoteOK API.
 
 ## Features
 
-- Scrapes multiple pages automatically
 - Extracts:
-  - Title
-  - Price
-  - Rating
-  - Image URL
-  - Description
-  - UPC
-  - Stock availability
-- Handles request errors
-- Saves data to CSV
+  - Job title
+  - Company
+  - Tags
+  - Salary
+  - Location
+  - Date
+  - Full description
+- Cleans malformed text and encoding issues
+- Removes HTML tags from descriptions
+- Exports data to CSV
+- Uses API-based scraping instead of HTML scraping
 
 ## Technologies Used
 
 - Python
 - Requests
-- BeautifulSoup4
 - Pandas
+- BeautifulSoup4
+- ftfy
 
 ## Installation
 
@@ -41,8 +39,16 @@ python main.py
 
 ## Output
 
-The scraped data is saved to:
+Scraped jobs are saved to:
 
 ```bash
-books.csv
+jobs.csv
 ```
+
+## Preview
+
+![Preview](preview.png)
+
+## Notes
+
+This project uses the RemoteOK public API for educational purposes.
